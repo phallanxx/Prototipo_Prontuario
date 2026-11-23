@@ -20,7 +20,7 @@
         <span class="demo-pill">protótipo demonstrativo</span>
         <div class="role-switch" role="group" aria-label="Trocar visão">
           <button class="role-button" id="patientTab" aria-pressed="true">Paciente</button>
-          <button class="role-button" id="doctorTab" aria-pressed="false">Visão médica</button>
+          <button class="role-button" id="doctorTab" aria-pressed="false">Minha análise</button>
         </div>
       </div>
     </header>
@@ -29,16 +29,16 @@
       <div>
         <div class="eyebrow">Esclerose múltipla · acompanhamento diário</div>
         <h1>Registre as mudanças pequenas entre consultas.</h1>
-        <p>Relatos diários de como você se sentiu, pequenas queixas e tarefas breves podem ajudar a organizar a conversa com o médico ao longo do tempo.</p>
+        <p>O diário começa vazio. Registre como você se sentiu, pequenas queixas e tarefas breves para acompanhar suas próprias mudanças ao longo do tempo.</p>
       </div>
       <div class="intro-note">Protótipo sem login: a troca entre as visões não protege o acesso. Os registros ficam sem criptografia neste navegador. Use somente dados fictícios; o sistema não determina surto ou progressão.</div>
     </section>
 
     <section class="intro doctor-intro" id="doctorIntro" hidden>
       <div>
-          <div class="eyebrow">Acompanhamento da esclerose múltipla · demonstração</div>
-          <h2>Relatos do paciente e dados clínicos da equipe</h2>
-          <p>Veja sintomas novos ou alterados, tarefas de acompanhamento e informações clínicas registradas pelo profissional.</p>
+          <div class="eyebrow">Acompanhamento pessoal · análise dos seus registros</div>
+          <h2>Seus relatos entre consultas</h2>
+          <p>Comece pelo diário. Gráficos e resumo vão se preencher conforme você registrar suas percepções.</p>
       </div>
     </section>
 
@@ -184,24 +184,24 @@
       <section class="view" id="doctorView" aria-labelledby="doctorHeading">
         <div class="doctor-layout">
           <aside class="card patients-card">
-            <div class="patients-head"><h3>Pacientes de demonstração</h3><span class="count-pill">3</span></div>
+            <div class="patients-head"><h3>Meu acompanhamento</h3><span class="count-pill" id="patientCount">0</span></div>
             <div class="patient-list" id="patientList"></div>
-            <p class="patients-note">Todos os nomes e registros desta demonstração são fictícios. Nenhum dado real deve ser inserido aqui.</p>
+            <p class="patients-note">Seu acompanhamento aparece aqui após o primeiro registro diário.</p>
           </aside>
           <div class="doctor-main">
             <section class="card profile-card">
               <div class="profile-info">
-                <div class="avatar" id="doctorAvatar">P1</div>
-                <div><h3 id="doctorName">Paciente 001</h3><p id="doctorSubtitle">Acompanhamento demonstrativo · esclerose múltipla</p></div>
+                <div class="avatar" id="doctorAvatar">—</div>
+                <div><h3 id="doctorName">Nenhum paciente</h3><p id="doctorSubtitle">Comece pelo diário para gerar sua própria análise.</p></div>
               </div>
               <div class="profile-actions">
                 <button class="secondary-button" id="summaryButton">Preparar resumo</button>
-                <button class="secondary-button" id="resetDemoButton">Restaurar demonstração</button>
+                <button class="secondary-button" id="clearDataButton">Apagar meus registros</button>
               </div>
             </section>
             <div class="stat-grid">
               <section class="card stat-card"><div class="stat-label">Registros no período</div><div class="stat-value" id="statRecords">—</div><div class="stat-foot" id="statRange">últimos 90 dias</div></section>
-              <section class="card stat-card"><div class="stat-label">Sinais novos ou alterados</div><div class="stat-value" id="statDifferent">—</div><div class="stat-foot">relatados pelo paciente</div></section>
+              <section class="card stat-card"><div class="stat-label">Sinais novos ou alterados</div><div class="stat-value" id="statDifferent">—</div><div class="stat-foot">relatos próprios</div></section>
               <section class="card stat-card"><div class="stat-label">Registro mais recente</div><div class="stat-value" id="statLast" style="font-size:19px">—</div><div class="stat-foot" id="statLastNote">sem interpretação automática</div></section>
             </div>
             <div class="doctor-secondary-grid">
@@ -214,30 +214,15 @@
                 <p class="helper">Mostra apenas a execução da tarefa. Não atribui causa nem indica declínio por si só.</p>
               </section>
               <section class="card clinical-profile">
-                <div class="eyebrow">Perfil clínico · registro da equipe</div>
-                <h3>Contexto para a consulta</h3>
-                <div class="clinical-grid">
-                  <div class="clinical-field"><span>Idade / município</span><strong id="clinicalDemographics">34 · município demo</strong></div>
-                  <div class="clinical-field"><span>Idade no primeiro sintoma</span><strong id="clinicalAgeOnset">29 (demo)</strong></div>
-                  <div class="clinical-field"><span>Manifestação inicial</span><strong id="clinicalFirstSymptom">Alteração visual (demo)</strong></div>
-                  <div class="clinical-field"><span>Primeiro surto</span><strong id="clinicalFirstRelapse">Registro demo</strong></div>
-                  <div class="clinical-field"><span>Tempo até diagnóstico</span><strong id="clinicalDiagnosisDelay">8 meses (demo)</strong></div>
-                  <div class="clinical-field"><span>Fenótipo no diagnóstico</span><strong id="clinicalInitialPhenotype">EMRR</strong></div>
-                  <div class="clinical-field"><span>Fenótipo atual</span><strong id="clinicalPhenotype">EMRR</strong></div>
-                  <div class="clinical-field"><span>EDSS mais recente</span><strong id="clinicalEdss">1,5</strong></div>
-                  <div class="clinical-field"><span>Progressão clínica</span><strong id="clinicalProgression">Em acompanhamento</strong></div>
-                  <div class="clinical-field"><span>Internações relacionadas</span><strong id="clinicalHospitalizations">1 (demo)</strong></div>
-                  <div class="clinical-field"><span>Comorbidades</span><strong id="clinicalComorbidities">Não informado (demo)</strong></div>
-                  <div class="clinical-field"><span>Terapia modificadora</span><strong id="clinicalTreatment">Registro médico</strong></div>
-                  <div class="clinical-field"><span>Reação à infusão</span><strong id="clinicalInfusionReaction">Sem registro demo</strong></div>
-                </div>
-                <p class="clinical-caption">Campos alinhados às variáveis descritas no TCC; todos os valores exibidos são fictícios. O estudo foi descritivo (67 pacientes) e não prevê a evolução individual. EDSS e classificação são preenchidos pela equipe, não calculados pelo diário.</p>
+                <div class="eyebrow">Leitura dos dados</div>
+                <h3>Apoio à consulta</h3>
+                <p class="clinical-caption">O painel organiza seus autorrelatos e resultados de tarefas exploratórias ao longo do tempo. Os gráficos não determinam diagnóstico, surto ou progressão. Converse sobre mudanças com um profissional de saúde.</p>
               </section>
             </div>
             <div class="doctor-data-grid">
               <section class="card doctor-chart-card">
                 <div class="card-head">
-                  <div><div class="eyebrow">Visão longitudinal</div><h3 id="doctorHeading">Como o paciente se sentiu</h3></div>
+                  <div><div class="eyebrow">Visão longitudinal</div><h3 id="doctorHeading">Como você se sentiu</h3></div>
                   <div class="range-switch" role="group" aria-label="Período do painel">
                     <button class="range-button" data-doctor-range="30" aria-pressed="false">30d</button>
                     <button class="range-button" data-doctor-range="90" aria-pressed="true">90d</button>
@@ -247,7 +232,7 @@
                 <div class="chart-wrap"><svg class="chart" id="doctorChart" viewBox="0 0 600 225" role="img" aria-label="Gráfico longitudinal de autorrelatos diários"></svg></div>
                 <div class="notice">
                   <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/><path d="M12 10.5v5M12 7.5h.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-                  <span>Autoavaliação pessoal (1–5), separada do EDSS. A leitura clínica considera o contexto e os registros da equipe.</span>
+                  <span>Autoavaliação pessoal (1–5), não é escala clínica. Converse com um profissional sobre mudanças.</span>
                 </div>
               </section>
               <section class="card timeline-card">
