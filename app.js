@@ -103,9 +103,11 @@
       }
       function loadEntries() {
         try {
-          const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+          const stored = localStorage.getItem(STORAGE_KEY);
+          if (stored && stored.length > 2500000) return baseEntries.slice();
+          const saved = JSON.parse(stored);
           if (Array.isArray(saved)) {
-            const normalized = saved.slice(-2000).map(normalizeEntry).filter(Boolean);
+            const normalized = saved.slice(-1000).map(normalizeEntry).filter(Boolean);
             return baseEntries.concat(normalized);
           }
         } catch (error) { /* use demo records if browser storage is unavailable */ }
@@ -113,7 +115,7 @@
       }
       function persistEntries() {
         try {
-          const ownEntries = entries.filter(function (entry) { return !entry.demo; }).slice(-2000).map(normalizeEntry).filter(Boolean);
+          const ownEntries = entries.filter(function (entry) { return !entry.demo; }).slice(-1000).map(normalizeEntry).filter(Boolean);
           localStorage.setItem(STORAGE_KEY, JSON.stringify(ownEntries));
           return true;
         } catch (error) {
