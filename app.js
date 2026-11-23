@@ -55,18 +55,66 @@
         p003: { demographics: "28 · município demo", ageOnset: "26 (demo)", firstSymptom: "Fraqueza (demo)", firstRelapse: "Registro demo", diagnosisDelay: "6 meses (demo)", initialPhenotype: "EMRR", phenotype: "EMRR", edss: "0,0 (demo)", progression: "Sem marcação demo", hospitalizations: "0 (demo)", comorbidities: "Não informado (demo)", treatment: "Registro demo", infusionReaction: "Sem registro demo" }
       };
 
+      function isValidDate(value) {
+        if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+        const date = new Date(value + "T00:00:00Z");
+        return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value;
+      }
+      function boundedText(value, maxLength) {
+        return typeof value === "string" ? value.slice(0, maxLength) : "";
+      }
+      function boundedList(value) {
+        if (!Array.isArray(value)) return [];
+        return value.slice(0, 12).map(function (item) { return boundedText(item, 80); }).filter(Boolean);
+      }
+      function normalizeEntry(entry) {
+        if (!entry || typeof entry !== "object" || Array.isArray(entry) || entry.demo || entry.patientId !== "p001") return null;
+        if (!isValidDate(entry.date) || entry.date > isoDay(0) || !Number.isInteger(Number(entry.rating)) || Number(entry.rating) < 1 || Number(entry.rating) > 5) return null;
+        const tags = boundedList(entry.tags);
+        const symptoms = boundedList(entry.symptoms);
+        const createdAt = boundedText(entry.createdAt, 40);
+        const validCreatedAt = createdAt && Number.isFinite(Date.parse(createdAt)) ? createdAt : "";
+        const onset = isValidDate(entry.symptomOnset) && entry.symptomOnset <= entry.date ? entry.symptomOnset : "";
+        const severity = entry.symptomSeverity === "" || entry.symptomSeverity == null ? "" : Number(entry.symptomSeverity);
+        const seconds = entry.typingSeconds == null || entry.typingSeconds === "" ? null : Number(entry.typingSeconds);
+        const accuracy = entry.typingAccuracy == null || entry.typingAccuracy === "" ? null : Number(entry.typingAccuracy);
+        const durations = ["", "Menos de um dia", "1 a 3 dias", "Mais de 3 dias", "Ainda persiste"];
+        const impacts = ["", "Não afetou", "Leve", "Moderado", "Grande"];
+        return {
+          id: boundedText(entry.id, 80) || "registro-" + entry.date,
+          patientId: "p001",
+          date: entry.date,
+          createdAt: validCreatedAt,
+          rating: Number(entry.rating),
+          tags: tags,
+          symptoms: symptoms.length ? symptoms : tags,
+          dailyDomains: boundedList(entry.dailyDomains),
+          changeType: ["none", "known", "new"].includes(entry.changeType) ? entry.changeType : (entry.different ? "known" : "none"),
+          symptomOnset: onset,
+          symptomDuration: durations.includes(entry.symptomDuration) ? entry.symptomDuration : "",
+          symptomSeverity: Number.isInteger(severity) && severity >= 0 && severity <= 10 ? severity : "",
+          activityImpact: impacts.includes(entry.activityImpact) ? entry.activityImpact : "",
+          typingSeconds: Number.isFinite(seconds) && seconds > 0 && seconds <= 3600 ? seconds : null,
+          typingAccuracy: Number.isInteger(accuracy) && accuracy >= 0 && accuracy <= 100 ? accuracy : null,
+          note: boundedText(entry.note, 500),
+          different: entry.different === true || entry.changeType === "known" || entry.changeType === "new",
+          demo: false
+        };
+      }
       function loadEntries() {
         try {
           const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-          if (Array.isArray(saved)) return baseEntries.concat(saved.filter(function (e) { return !e.demo; }).map(function (entry) {
-            return Object.assign({ createdAt: "", symptoms: entry.tags || [], dailyDomains: [], changeType: entry.different ? "known" : "none", symptomSeverity: "", activityImpact: "" }, entry);
-          }));
+          if (Array.isArray(saved)) {
+            const normalized = saved.slice(-2000).map(normalizeEntry).filter(Boolean);
+            return baseEntries.concat(normalized);
+          }
         } catch (error) { /* use demo records if browser storage is unavailable */ }
         return baseEntries.slice();
       }
       function persistEntries() {
         try {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(entries.filter(function (e) { return !e.demo; })));
+          const ownEntries = entries.filter(function (entry) { return !entry.demo; }).slice(-2000).map(normalizeEntry).filter(Boolean);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(ownEntries));
           return true;
         } catch (error) {
           return false;
@@ -192,22 +240,43 @@
         const last = formatDate(tasks[tasks.length - 1].date, { month: "short", year: "2-digit" }).replace(".", "");
         svg.innerHTML = grid.join("") + '<path class="typing-chart-line" d="' + path + '"></path>' + marks + '<text class="chart-label" x="' + left + '" y="' + (height - 5) + '">' + first + '</text><text class="chart-label" x="' + right + '" y="' + (height - 5) + '" text-anchor="end">' + last + '</text>';
       }
-      function entryHtml(entry, doctor) {
+      function makeTextElement(tagName, className, text) {
+        const element = document.createElement(tagName);
+        if (className) element.className = className;
+        element.textContent = text;
+        return element;
+      }
+      function entryNode(entry, doctor) {
         const symptoms = entry.symptoms && entry.symptoms.length ? entry.symptoms : (entry.tags || []);
         const categories = entryCategories(entry);
         const details = [];
-        if (entry.note) details.push(escapeHtml(entry.note));
-        if (entry.symptomSeverity !== "" && entry.symptomSeverity != null) details.push("Intensidade percebida: " + escapeHtml(entry.symptomSeverity) + "/10.");
-        if (entry.activityImpact) details.push("Impacto na rotina: " + escapeHtml(entry.activityImpact.toLowerCase()) + ".");
-        if (entry.symptomOnset) details.push("Início informado: " + escapeHtml(formatDate(entry.symptomOnset)) + (entry.symptomDuration ? "; duração: " + escapeHtml(entry.symptomDuration.toLowerCase()) : "") + ".");
-        const detail = details.length ? details.join(" ") : (symptoms.length ? "Relato sobre " + escapeHtml(symptoms.join(", ").toLowerCase()) + "." : "Sem observação escrita.");
-        const taskDetail = Number(entry.typingSeconds) > 0 ? " · Digitação: " + Number(entry.typingSeconds).toFixed(1) + " s, " + Number(entry.typingAccuracy || 0) + "% de correspondência" : "";
+        if (entry.note) details.push(entry.note);
+        if (entry.symptomSeverity !== "" && entry.symptomSeverity != null) details.push("Intensidade percebida: " + entry.symptomSeverity + "/10.");
+        if (entry.activityImpact) details.push("Impacto na rotina: " + entry.activityImpact.toLowerCase() + ".");
+        if (entry.symptomOnset) details.push("Início informado: " + formatDate(entry.symptomOnset) + (entry.symptomDuration ? "; duração: " + entry.symptomDuration.toLowerCase() : "") + ".");
+        const detail = details.length ? details.join(" ") : (symptoms.length ? "Relato sobre " + symptoms.join(", ").toLowerCase() + "." : "Sem observação escrita.");
+        const taskDetail = Number(entry.typingSeconds) > 0 ? "Digitação: " + Number(entry.typingSeconds).toFixed(1) + " s, " + Number(entry.typingAccuracy || 0) + "% de correspondência." : "";
         const status = entry.changeType === "new" ? "sintoma novo" : entry.changeType === "known" || entry.different ? "sintoma conhecido alterado" : "sem mudança marcada";
-        const meta = categories.length ? escapeHtml(categories.join(" · ")) : "Sem sintoma marcado";
         const time = formatEntryTime(entry);
-        const patientView = '<div class="entry-row"><div class="entry-dot">' + Number(entry.rating) + '</div><div class="entry-main"><strong>' + meta + '</strong><p>' + detail + escapeHtml(taskDetail) + '</p></div><div class="entry-date">' + labelDate(entry.date) + (time ? ' · ' + time : '') + '</div></div>';
-        const doctorView = '<div class="entry-row"><div class="entry-dot">' + Number(entry.rating) + '</div><div class="entry-main"><strong>' + formatDate(entry.date, { day: "2-digit", month: "short" }).replace(".", "") + (time ? ' · ' + time : '') + ' · ' + status + '</strong><p>' + detail + escapeHtml(taskDetail) + '</p></div></div>';
-        return doctor ? doctorView : patientView;
+        const row = document.createElement("div");
+        row.className = "entry-row";
+        row.appendChild(makeTextElement("div", "entry-dot", String(entry.rating)));
+        const main = document.createElement("div");
+        main.className = "entry-main";
+        const heading = doctor
+          ? formatDate(entry.date, { day: "2-digit", month: "short" }).replace(".", "") + (time ? " · " + time : "") + " · " + status
+          : (categories.length ? categories.join(" · ") : "Sem sintoma marcado");
+        main.appendChild(makeTextElement("strong", "", heading));
+        main.appendChild(makeTextElement("p", "", [detail, taskDetail].filter(Boolean).join(" ")));
+        row.appendChild(main);
+        if (!doctor) row.appendChild(makeTextElement("div", "entry-date", labelDate(entry.date) + (time ? " · " + time : "")));
+        return row;
+      }
+      function renderEntries(container, list, doctor, emptyMessage) {
+        const fragment = document.createDocumentFragment();
+        if (list.length) list.forEach(function (entry) { fragment.appendChild(entryNode(entry, doctor)); });
+        else fragment.appendChild(makeTextElement("div", "empty-state", emptyMessage));
+        container.replaceChildren(fragment);
       }
       function renderPatient() {
         const list = getPatientEntries("p001", patientRange).slice().reverse();
@@ -218,19 +287,30 @@
         const lastTyping = typing[0];
         document.getElementById("typingPatientLatest").textContent = lastTyping ? Number(lastTyping.typingSeconds).toFixed(1) + " s · " + Number(lastTyping.typingAccuracy || 0) + "%" : "sem teste";
         const recent = getPatientEntries("p001", 180).slice().reverse().slice(0, 3);
-        document.getElementById("patientRecent").innerHTML = recent.length ? recent.map(function (e) { return entryHtml(e, false); }).join("") : '<div class="empty-state">Seus registros vão aparecer aqui.</div>';
+        renderEntries(document.getElementById("patientRecent"), recent, false, "Seus registros vão aparecer aqui.");
       }
       function renderPatientList() {
         const container = document.getElementById("patientList");
-        container.innerHTML = demoPatients.map(function (patient) {
+        const fragment = document.createDocumentFragment();
+        demoPatients.forEach(function (patient) {
           const items = getPatientEntries(patient.id, 180);
           const last = items.length ? items[items.length - 1] : null;
           const status = last ? (dateDistance(last.date) === 0 ? "registro hoje" : "último: " + labelDate(last.date)) : "sem registros";
-          return '<button class="patient-item ' + (patient.id === selectedPatientId ? "active" : "") + '" data-patient="' + patient.id + '" aria-pressed="' + (patient.id === selectedPatientId) + '"><span class="avatar">' + patient.initials + '</span><span class="patient-meta"><strong>' + patient.name + '</strong><span>' + status + '</span></span><span class="patient-chevron">›</span></button>';
-        }).join("");
-        container.querySelectorAll("[data-patient]").forEach(function (button) {
-          button.addEventListener("click", function () { selectedPatientId = button.getAttribute("data-patient"); renderAll(); });
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "patient-item" + (patient.id === selectedPatientId ? " active" : "");
+          button.setAttribute("aria-pressed", String(patient.id === selectedPatientId));
+          button.appendChild(makeTextElement("span", "avatar", patient.initials));
+          const meta = document.createElement("span");
+          meta.className = "patient-meta";
+          meta.appendChild(makeTextElement("strong", "", patient.name));
+          meta.appendChild(makeTextElement("span", "", status));
+          button.appendChild(meta);
+          button.appendChild(makeTextElement("span", "patient-chevron", "›"));
+          button.addEventListener("click", function () { selectedPatientId = patient.id; renderAll(); });
+          fragment.appendChild(button);
         });
+        container.replaceChildren(fragment);
       }
       function renderDoctor() {
         const patient = demoPatients.find(function (p) { return p.id === selectedPatientId; }) || demoPatients[0];
@@ -266,7 +346,7 @@
         document.getElementById("clinicalComorbidities").textContent = clinical.comorbidities;
         document.getElementById("clinicalInfusionReaction").textContent = clinical.infusionReaction;
         const recent = data.slice().sort(function (a, b) { return b.date.localeCompare(a.date); }).slice(0, 5);
-        document.getElementById("doctorTimeline").innerHTML = recent.length ? recent.map(function (e) { return entryHtml(e, true); }).join("") : '<div class="empty-state">Ainda não há registros neste período.</div>';
+        renderEntries(document.getElementById("doctorTimeline"), recent, true, "Ainda não há registros neste período.");
         renderPatientList();
       }
       function renderAll() { renderPatient(); renderDoctor(); }
