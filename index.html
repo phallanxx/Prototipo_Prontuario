@@ -622,6 +622,10 @@
         const time = new Date(value).getTime();
         return Number.isFinite(time) ? time : 0;
       }
+      function entryCategories(entry) {
+        const symptoms = entry.symptoms && entry.symptoms.length ? entry.symptoms : (entry.tags || []);
+        return symptoms.concat(entry.dailyDomains || []);
+      }
       function formatEntryTime(entry) {
         if (!entry.createdAt) return "";
         return new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit" }).format(new Date(entry.createdAt));
@@ -715,7 +719,7 @@
       }
       function entryHtml(entry, doctor) {
         const symptoms = entry.symptoms && entry.symptoms.length ? entry.symptoms : (entry.tags || []);
-        const categories = symptoms.concat(entry.dailyDomains || []);
+        const categories = entryCategories(entry);
         const details = [];
         if (entry.note) details.push(escapeHtml(entry.note));
         if (entry.symptomSeverity !== "" && entry.symptomSeverity != null) details.push("Intensidade percebida: " + escapeHtml(entry.symptomSeverity) + "/10.");
@@ -830,6 +834,7 @@
         const data = getPatientEntries(patient.id, doctorRange).slice().sort(function (a, b) { return entrySortTime(a) - entrySortTime(b); });
         const different = data.filter(function (e) { return e.changeType === "new" || e.changeType === "known" || e.different; });
         const last = data[data.length - 1];
+        const lastCategories = last ? entryCategories(last) : [];
         const typing = data.filter(function (e) { return Number(e.typingSeconds) > 0; });
         const clinical = clinicalProfiles[patient.id];
         const period = doctorRange === 180 ? "últimos 6 meses" : "últimos " + doctorRange + " dias";
@@ -838,7 +843,7 @@
           "Período: " + period + ".",
           "Registros no período: " + data.length + ".",
           "Registros com mudança nova ou conhecida assinalada: " + different.length + ".",
-          last ? "Relato mais recente (" + formatLongDate(last.date) + (formatEntryTime(last) ? " às " + formatEntryTime(last) : "") + "): percepção pessoal " + describeRating(last.rating) + "; mudança: " + (last.changeType === "new" ? "sintoma novo" : last.changeType === "known" || last.different ? "sintoma conhecido alterado" : "nenhuma marcada") + ((last.symptoms || last.tags || []).concat(last.dailyDomains || []).length ? "; sintomas/áreas: " + (last.symptoms || last.tags || []).concat(last.dailyDomains || []).join(", ") : "") + (last.symptomOnset ? "; início informado: " + formatLongDate(last.symptomOnset) : "") + (last.symptomDuration ? "; duração: " + last.symptomDuration : "") + (last.symptomSeverity !== "" && last.symptomSeverity != null ? "; intensidade percebida: " + last.symptomSeverity + "/10" : "") + (last.activityImpact ? "; impacto na rotina: " + last.activityImpact : "") + (last.note ? ". Observação: " + last.note : ".") : "Ainda não há registros.",
+          last ? "Relato mais recente (" + formatLongDate(last.date) + (formatEntryTime(last) ? " às " + formatEntryTime(last) : "") + "): percepção pessoal " + describeRating(last.rating) + "; mudança: " + (last.changeType === "new" ? "sintoma novo" : last.changeType === "known" || last.different ? "sintoma conhecido alterado" : "nenhuma marcada") + (lastCategories.length ? "; sintomas/áreas: " + lastCategories.join(", ") : "") + (last.symptomOnset ? "; início informado: " + formatLongDate(last.symptomOnset) : "") + (last.symptomDuration ? "; duração: " + last.symptomDuration : "") + (last.symptomSeverity !== "" && last.symptomSeverity != null ? "; intensidade percebida: " + last.symptomSeverity + "/10" : "") + (last.activityImpact ? "; impacto na rotina: " + last.activityImpact : "") + (last.note ? ". Observação: " + last.note : ".") : "Ainda não há registros.",
           typing.length ? "Tarefa experimental de digitação: " + typing.length + " tentativa(s); última em " + formatLongDate(typing[typing.length - 1].date) + ", " + Number(typing[typing.length - 1].typingSeconds).toFixed(1) + " s e " + Number(typing[typing.length - 1].typingAccuracy || 0) + "% de correspondência." : "Tarefa experimental de digitação: sem tentativas no período.",
           "Contexto clínico demonstrativo registrado pela equipe: fenótipo " + clinical.phenotype + "; EDSS " + clinical.edss + "; progressão: " + clinical.progression + "; terapia: " + clinical.treatment + ".",
           "Histórico ilustrativo: idade/município " + clinical.demographics + "; idade no primeiro sintoma " + clinical.ageOnset + "; manifestação inicial " + clinical.firstSymptom + "; primeiro surto " + clinical.firstRelapse + "; tempo até diagnóstico " + clinical.diagnosisDelay + "; fenótipo inicial " + clinical.initialPhenotype + "; internações " + clinical.hospitalizations + "; comorbidades " + clinical.comorbidities + "; reação à infusão " + clinical.infusionReaction + ".",
