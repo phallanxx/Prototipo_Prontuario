@@ -99,8 +99,6 @@
     textarea { display: block; width: 100%; min-height: 88px; resize: vertical; padding: 12px 13px; border: 1px solid var(--line); border-radius: 11px; background: #fcfdfc; color: var(--ink); font-size: 12px; }
     textarea::placeholder { color: #a3aea8; }
     .form-foot { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-top: 15px; }
-    .check-line { display: flex; align-items: center; gap: 8px; color: #536c60; font-size: 12px; }
-    .check-line input { accent-color: var(--green); width: 15px; height: 15px; }
     .primary-button, .secondary-button, .text-button { border: 0; }
     .primary-button { display: inline-flex; align-items: center; gap: 8px; padding: 11px 15px; border-radius: 10px; color: #fff; background: var(--green); font-size: 12px; font-weight: 720; transition: .15s ease; }
     .primary-button:hover { background: var(--green-dark); transform: translateY(-1px); }
@@ -195,7 +193,6 @@
     .summary-box { margin: 17px 0; padding: 16px; border: 1px solid var(--line); border-radius: 12px; color: #455d50; background: #f9fbf9; white-space: pre-wrap; font-size: 12px; line-height: 1.65; }
     .modal-actions { display: flex; justify-content: flex-end; gap: 8px; }
     .empty-state { padding: 22px 12px; color: #829087; text-align: center; font-size: 11px; }
-    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
     @media (max-width: 900px) {
       .shell { padding: 22px 22px 40px; }
       .patient-grid { grid-template-columns: minmax(0,1fr) minmax(280px,.85fr); }
