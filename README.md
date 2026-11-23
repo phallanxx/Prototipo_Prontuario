@@ -1,18 +1,18 @@
 # Entre Consultas
 
-Protótipo demonstrativo de acompanhamento entre consultas, separado em `index.html`, `styles.css` e `app.js`.
+Protótipo de diário de acompanhamento pessoal. Ele começa sem pacientes nem registros de exemplo. Faça seus próprios registros; depois do primeiro, a visão **Minha análise** mostra os gráficos e permite preparar um resumo.
 
 ## Abrir
 
-Extraia o ZIP e mantenha os três arquivos na mesma pasta. Abra `index.html` em um navegador moderno. O protótipo não usa servidor nem dependências externas.
+Extraia o ZIP e mantenha `index.html`, `styles.css` e `app.js` juntos. Abra `index.html` em um navegador moderno. O protótipo não usa servidor nem dependências externas.
 
-## Salvamento
+## Salvamento e privacidade
 
-Os registros ficam no `localStorage` do navegador e permanecem nesse perfil até que os dados do site sejam apagados. Há validação e limite de tamanho para os registros, mas o navegador não criptografa esses dados para o aplicativo.
+Os registros são guardados no `localStorage` deste navegador. O botão **Apagar meus registros** limpa o acompanhamento atual. Ao carregar esta versão, o aplicativo também tenta remover o armazenamento da demonstração antiga.
 
-**Use apenas dados fictícios.** Não há contas, autenticação, controle real de acesso entre as visões, sincronização ou banco de dados. A exportação cria um JSON com os relatos e precisa ser guardada em local privado.
+Não há autenticação, controle real de acesso ou criptografia. Use somente dados fictícios; não registre informações reais de saúde. Arquivos JSON exportados contêm relatos e devem ser guardados em local privado.
 
-O protótipo organiza autorrelatos; não avalia diagnóstico, surto, progressão ou tratamento. O teste de digitação é experimental e não validado.
+Os gráficos organizam autorrelatos; não determinam diagnóstico, surto ou progressão. O teste de digitação é experimental e não validado.
 
 Consulte [SECURITY.md](SECURITY.md) antes de qualquer evolução com dados reais.
 
