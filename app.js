@@ -1,7 +1,8 @@
 
     (function () {
       "use strict";
-      const STORAGE_KEY = "entre-consultas-demo-entries-v1";
+      const LEGACY_STORAGE_KEY = "entre-consultas-demo-entries-v1";
+      const STORAGE_KEY = "entre-consultas-self-entries-v2";
       const DAY = 86400000;
       const today = new Date();
       today.setHours(12, 0, 0, 0);
@@ -9,39 +10,8 @@
         const d = new Date(today.getTime() - n * DAY);
         return d.toISOString().slice(0, 10);
       };
-      const demoPatients = [
-        { id: "p001", name: "Paciente 001", initials: "P1", summary: "Acompanhamento demonstrativo · esclerose múltipla" },
-        { id: "p002", name: "Paciente 002", initials: "P2", summary: "Acompanhamento demonstrativo · dados fictícios" },
-        { id: "p003", name: "Paciente 003", initials: "P3", summary: "Acompanhamento demonstrativo · dados fictícios" }
-      ];
-      const baseEntries = [
-        { patientId: "p001", days: 88, rating: 4, tags: ["Energia"], symptoms: [], changeType: "none", note: "Semana tranquila; mantive a rotina.", different: false, typingSeconds: 34, typingAccuracy: 93 },
-        { patientId: "p001", days: 79, rating: 3, tags: ["Mobilidade"], symptoms: ["Fraqueza / paresia / tremor"], changeType: "known", note: "Caminhei mais devagar no fim do dia.", different: true },
-        { patientId: "p001", days: 70, rating: 4, tags: ["Energia"], symptoms: [], changeType: "none", note: "Disposição parecida com a semana passada.", different: false },
-        { patientId: "p001", days: 61, rating: 3, tags: ["Equilíbrio"], symptoms: ["Coordenação / equilíbrio / ataxia"], changeType: "known", note: "Percebi um pouco mais de insegurança ao caminhar.", different: true },
-        { patientId: "p001", days: 51, rating: 4, tags: ["Mobilidade"], note: "Dia dentro do habitual.", different: false },
-        { patientId: "p001", days: 42, rating: 3, tags: ["Energia"], symptoms: ["Formigamento / sensibilidade"], changeType: "new", note: "Cansaço maior no fim da tarde e formigamento por algumas horas.", different: true, typingSeconds: 31, typingAccuracy: 95 },
-        { patientId: "p001", days: 34, rating: 3, tags: ["Mobilidade", "Equilíbrio"], note: "Subir escadas exigiu mais esforço.", different: true },
-        { patientId: "p001", days: 25, rating: 4, tags: [], note: "Sem observações específicas.", different: false },
-        { patientId: "p001", days: 17, rating: 3, tags: ["Energia"], note: "Precisei descansar depois da caminhada.", different: true },
-        { patientId: "p001", days: 9, rating: 3, tags: ["Mobilidade"], symptoms: ["Visão / neurite óptica / visão dupla"], changeType: "known", note: "Mais dificuldade para manter o ritmo habitual.", different: true, typingSeconds: 37, typingAccuracy: 90 },
-        { patientId: "p001", days: 2, rating: 4, tags: ["Energia"], symptoms: [], changeType: "none", note: "Hoje me senti como de costume.", different: false },
-        { patientId: "p002", days: 82, rating: 3, tags: ["Energia"], note: "Cansaço ao final do dia.", different: false },
-        { patientId: "p002", days: 65, rating: 4, tags: [], note: "Dia dentro do habitual.", different: false },
-        { patientId: "p002", days: 49, rating: 3, tags: ["Visão / sensibilidade"], symptoms: ["Visão / neurite óptica / visão dupla"], changeType: "new", note: "Registrei uma sensação diferente por algumas horas.", different: true, typingSeconds: 29, typingAccuracy: 96 },
-        { patientId: "p002", days: 32, rating: 3, tags: ["Energia"], note: "Precisava de pausas mais frequentes.", different: true },
-        { patientId: "p002", days: 16, rating: 4, tags: [], note: "Sem observações específicas.", different: false },
-        { patientId: "p002", days: 4, rating: 3, tags: ["Equilíbrio"], note: "Mais cuidado ao caminhar em terreno irregular.", different: true },
-        { patientId: "p003", days: 76, rating: 4, tags: [], note: "Dia dentro do habitual.", different: false },
-        { patientId: "p003", days: 60, rating: 4, tags: ["Energia"], note: "Mantive minhas atividades habituais.", different: false },
-        { patientId: "p003", days: 44, rating: 3, tags: ["Mobilidade"], symptoms: ["Fraqueza / paresia / tremor"], changeType: "known", note: "Uma caminhada pareceu mais cansativa.", different: true, typingSeconds: 32, typingAccuracy: 92 },
-        { patientId: "p003", days: 28, rating: 3, tags: ["Energia"], note: "Mais pausas durante o dia.", different: true },
-        { patientId: "p003", days: 12, rating: 4, tags: [], note: "Sem observações específicas.", different: false },
-        { patientId: "p003", days: 1, rating: 4, tags: [], note: "Como de costume.", different: false }
-      ].map(function (item, index) {
-        const date = isoDay(item.days);
-        return { id: "demo-" + index, patientId: item.patientId, date: date, createdAt: new Date(date + "T12:00:00").toISOString(), rating: item.rating, tags: item.tags, symptoms: item.symptoms || [], changeType: item.changeType || (item.different ? "known" : "none"), symptomOnset: item.symptomOnset || "", symptomDuration: item.symptomDuration || "", symptomSeverity: "", activityImpact: "", typingSeconds: item.typingSeconds || null, typingAccuracy: item.typingAccuracy || null, note: item.note, different: item.different, demo: true };
-      });
+      const selfPatient = { id: "p001", name: "Meu acompanhamento", initials: "EU", summary: "Diário pessoal · seus registros" };
+      try { localStorage.removeItem(LEGACY_STORAGE_KEY); } catch (error) { /* storage may be unavailable */ }
       let entries = loadEntries();
       let selectedPatientId = "p001";
       let patientRange = 90;
@@ -49,11 +19,6 @@
       let typingStartedAt = null;
       let currentTypingResult = null;
       let typingTimer = null;
-      const clinicalProfiles = {
-        p001: { demographics: "34 · município demo", ageOnset: "29 (demo)", firstSymptom: "Alteração visual (demo)", firstRelapse: "Registro demo", diagnosisDelay: "8 meses (demo)", initialPhenotype: "EMRR", phenotype: "EMRR", edss: "1,5 (demo)", progression: "Acompanhamento demo", hospitalizations: "1 (demo)", comorbidities: "Não informado (demo)", treatment: "Registro demo", infusionReaction: "Sem registro demo" },
-        p002: { demographics: "41 · município demo", ageOnset: "33 (demo)", firstSymptom: "Formigamento (demo)", firstRelapse: "Registro demo", diagnosisDelay: "14 meses (demo)", initialPhenotype: "EMRR", phenotype: "EMSP", edss: "3,0 (demo)", progression: "Registro demo", hospitalizations: "2 (demo)", comorbidities: "Não informado (demo)", treatment: "Registro demo", infusionReaction: "Registro demo" },
-        p003: { demographics: "28 · município demo", ageOnset: "26 (demo)", firstSymptom: "Fraqueza (demo)", firstRelapse: "Registro demo", diagnosisDelay: "6 meses (demo)", initialPhenotype: "EMRR", phenotype: "EMRR", edss: "0,0 (demo)", progression: "Sem marcação demo", hospitalizations: "0 (demo)", comorbidities: "Não informado (demo)", treatment: "Registro demo", infusionReaction: "Sem registro demo" }
-      };
 
       function isValidDate(value) {
         if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
@@ -104,14 +69,14 @@
       function loadEntries() {
         try {
           const stored = localStorage.getItem(STORAGE_KEY);
-          if (stored && stored.length > 2500000) return baseEntries.slice();
+          if (stored && stored.length > 2500000) return [];
           const saved = JSON.parse(stored);
           if (Array.isArray(saved)) {
             const normalized = saved.slice(-1000).map(normalizeEntry).filter(Boolean);
-            return baseEntries.concat(normalized);
+            return normalized;
           }
         } catch (error) { /* use demo records if browser storage is unavailable */ }
-        return baseEntries.slice();
+        return [];
       }
       function persistEntries() {
         try {
@@ -294,7 +259,10 @@
       function renderPatientList() {
         const container = document.getElementById("patientList");
         const fragment = document.createDocumentFragment();
-        demoPatients.forEach(function (patient) {
+        const hasEntries = entries.some(function (entry) { return entry.patientId === selfPatient.id; });
+        document.getElementById("patientCount").textContent = hasEntries ? "1" : "0";
+        if (hasEntries) {
+          const patient = selfPatient;
           const items = getPatientEntries(patient.id, 180);
           const last = items.length ? items[items.length - 1] : null;
           const status = last ? (dateDistance(last.date) === 0 ? "registro hoje" : "último: " + labelDate(last.date)) : "sem registros";
@@ -311,17 +279,22 @@
           button.appendChild(makeTextElement("span", "patient-chevron", "›"));
           button.addEventListener("click", function () { selectedPatientId = patient.id; renderAll(); });
           fragment.appendChild(button);
-        });
+        } else {
+          fragment.appendChild(makeTextElement("div", "empty-state", "Seu acompanhamento aparecerá aqui após o primeiro registro."));
+        }
         container.replaceChildren(fragment);
       }
       function renderDoctor() {
-        const patient = demoPatients.find(function (p) { return p.id === selectedPatientId; }) || demoPatients[0];
-        const data = getPatientEntries(patient.id, doctorRange);
+        const patient = selfPatient;
+        const hasEntries = entries.some(function (entry) { return entry.patientId === patient.id; });
+        const data = hasEntries ? getPatientEntries(patient.id, doctorRange) : [];
         const sorted = data.slice().sort(function (a, b) { return entrySortTime(a) - entrySortTime(b); });
         const latest = sorted[sorted.length - 1];
-        document.getElementById("doctorName").textContent = patient.name;
-        document.getElementById("doctorAvatar").textContent = patient.initials;
-        document.getElementById("doctorSubtitle").textContent = patient.summary;
+        document.getElementById("doctorName").textContent = hasEntries ? patient.name : "Nenhum paciente";
+        document.getElementById("doctorAvatar").textContent = hasEntries ? patient.initials : "—";
+        document.getElementById("doctorSubtitle").textContent = hasEntries ? patient.summary : "Comece pelo diário para gerar sua própria análise.";
+        document.getElementById("summaryButton").disabled = !hasEntries;
+        document.getElementById("clearDataButton").disabled = !hasEntries;
         document.getElementById("statRecords").textContent = String(data.length);
         document.getElementById("statRange").textContent = doctorRange === 180 ? "últimos 6 meses" : "últimos " + doctorRange + " dias";
         document.getElementById("statDifferent").textContent = String(data.filter(function (e) { return e.changeType === "new" || e.changeType === "known" || e.different; }).length);
@@ -333,20 +306,6 @@
         const typing = data.filter(function (entry) { return Number(entry.typingSeconds) > 0; });
         const lastTyping = typing[typing.length - 1];
         document.getElementById("doctorTypingLatest").textContent = lastTyping ? Number(lastTyping.typingSeconds).toFixed(1) + " s · " + Number(lastTyping.typingAccuracy || 0) + "%" : "sem teste";
-        const clinical = clinicalProfiles[patient.id];
-        document.getElementById("clinicalPhenotype").textContent = clinical.phenotype;
-        document.getElementById("clinicalEdss").textContent = clinical.edss;
-        document.getElementById("clinicalProgression").textContent = clinical.progression;
-        document.getElementById("clinicalTreatment").textContent = clinical.treatment;
-        document.getElementById("clinicalDemographics").textContent = clinical.demographics;
-        document.getElementById("clinicalAgeOnset").textContent = clinical.ageOnset;
-        document.getElementById("clinicalFirstSymptom").textContent = clinical.firstSymptom;
-        document.getElementById("clinicalFirstRelapse").textContent = clinical.firstRelapse;
-        document.getElementById("clinicalDiagnosisDelay").textContent = clinical.diagnosisDelay;
-        document.getElementById("clinicalInitialPhenotype").textContent = clinical.initialPhenotype;
-        document.getElementById("clinicalHospitalizations").textContent = clinical.hospitalizations;
-        document.getElementById("clinicalComorbidities").textContent = clinical.comorbidities;
-        document.getElementById("clinicalInfusionReaction").textContent = clinical.infusionReaction;
         const recent = data.slice().sort(function (a, b) { return b.date.localeCompare(a.date); }).slice(0, 5);
         renderEntries(document.getElementById("doctorTimeline"), recent, true, "Ainda não há registros neste período.");
         renderPatientList();
@@ -387,23 +346,21 @@
         showToast("Cópia baixada. O arquivo contém relatos pessoais; guarde-o em local privado.");
       }
       function prepareSummary() {
-        const patient = demoPatients.find(function (p) { return p.id === selectedPatientId; }) || demoPatients[0];
+        const patient = selfPatient;
         const data = getPatientEntries(patient.id, doctorRange).slice().sort(function (a, b) { return entrySortTime(a) - entrySortTime(b); });
+        if (!data.length) { showToast("Faça seu primeiro registro diário para gerar uma análise."); return; }
         const different = data.filter(function (e) { return e.changeType === "new" || e.changeType === "known" || e.different; });
         const last = data[data.length - 1];
         const lastCategories = last ? entryCategories(last) : [];
         const typing = data.filter(function (e) { return Number(e.typingSeconds) > 0; });
-        const clinical = clinicalProfiles[patient.id];
         const period = doctorRange === 180 ? "últimos 6 meses" : "últimos " + doctorRange + " dias";
         const text = [
-          patient.name + " — síntese demonstrativa",
+          patient.name + " — síntese do período",
           "Período: " + period + ".",
           "Registros no período: " + data.length + ".",
           "Registros com mudança nova ou conhecida assinalada: " + different.length + ".",
           last ? "Relato mais recente (" + formatLongDate(last.date) + (formatEntryTime(last) ? " às " + formatEntryTime(last) : "") + "): percepção pessoal " + describeRating(last.rating) + "; mudança: " + (last.changeType === "new" ? "sintoma novo" : last.changeType === "known" || last.different ? "sintoma conhecido alterado" : "nenhuma marcada") + (lastCategories.length ? "; sintomas/áreas: " + lastCategories.join(", ") : "") + (last.symptomOnset ? "; início informado: " + formatLongDate(last.symptomOnset) : "") + (last.symptomDuration ? "; duração: " + last.symptomDuration : "") + (last.symptomSeverity !== "" && last.symptomSeverity != null ? "; intensidade percebida: " + last.symptomSeverity + "/10" : "") + (last.activityImpact ? "; impacto na rotina: " + last.activityImpact : "") + (last.note ? ". Observação: " + last.note : ".") : "Ainda não há registros.",
           typing.length ? "Tarefa experimental de digitação: " + typing.length + " tentativa(s); última em " + formatLongDate(typing[typing.length - 1].date) + ", " + Number(typing[typing.length - 1].typingSeconds).toFixed(1) + " s e " + Number(typing[typing.length - 1].typingAccuracy || 0) + "% de correspondência." : "Tarefa experimental de digitação: sem tentativas no período.",
-          "Contexto clínico demonstrativo registrado pela equipe: fenótipo " + clinical.phenotype + "; EDSS " + clinical.edss + "; progressão: " + clinical.progression + "; terapia: " + clinical.treatment + ".",
-          "Histórico ilustrativo: idade/município " + clinical.demographics + "; idade no primeiro sintoma " + clinical.ageOnset + "; manifestação inicial " + clinical.firstSymptom + "; primeiro surto " + clinical.firstRelapse + "; tempo até diagnóstico " + clinical.diagnosisDelay + "; fenótipo inicial " + clinical.initialPhenotype + "; internações " + clinical.hospitalizations + "; comorbidades " + clinical.comorbidities + "; reação à infusão " + clinical.infusionReaction + ".",
           "",
           "Esta síntese organiza autorrelatos e medidas exploratórias para apoiar a conversa na consulta. O estudo de referência é descritivo; a tarefa de digitação não é validada. Nada aqui confirma surto, progressão, diagnóstico ou tratamento."
         ].join("\n");
@@ -502,12 +459,12 @@
           showToast("Resumo copiado.");
         }
       });
-      document.getElementById("resetDemoButton").addEventListener("click", function () {
-        if (!window.confirm("Restaurar a demonstração? Isso apaga os registros próprios salvos neste navegador.")) return;
-        entries = baseEntries.slice();
+      document.getElementById("clearDataButton").addEventListener("click", function () {
+        if (!window.confirm("Apagar todos os registros deste acompanhamento neste navegador?")) return;
+        entries = [];
         try { localStorage.removeItem(STORAGE_KEY); } catch (error) { /* no local storage */ }
         renderAll();
-        showToast("Demonstração restaurada.");
+        showToast("Seu acompanhamento foi zerado neste navegador.");
       });
       document.addEventListener("keydown", function (event) { if (event.key === "Escape") closeSummary(); });
       renderAll();
