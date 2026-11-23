@@ -2,7 +2,7 @@
 
 ## Escopo deste protótipo
 
-Este é um protótipo estático de demonstração. Os dados de demonstração e os registros próprios ficam no armazenamento local do navegador (`localStorage`), em texto acessível ao mesmo perfil do navegador. Não há autenticação, autorização, criptografia, cópia de segurança automática, sincronização ou trilha de auditoria. Alternar para a visão médica é apenas uma mudança visual; não restringe acesso.
+Este é um protótipo estático de acompanhamento pessoal. Ele inicia sem pacientes ou registros de demonstração. Os registros próprios ficam no armazenamento local do navegador (`localStorage`), em texto acessível ao mesmo perfil. Não há autenticação, autorização, criptografia, cópia de segurança automática, sincronização ou trilha de auditoria. A aba de análise é apenas uma mudança visual; não restringe acesso.
 
 O código valida os registros recuperados do armazenamento, limita tamanho e quantidade, e escreve texto fornecido pelo usuário usando APIs de texto do DOM. Essas medidas ajudam a evitar corrupção acidental e injeção de HTML no protótipo; não protegem os dados de alguém com acesso ao navegador ou ao perfil do sistema.
 
@@ -11,6 +11,7 @@ O código valida os registros recuperados do armazenamento, limita tamanho e qua
 - Utilize somente dados fictícios e identificadores de demonstração.
 - Não use nomes, contatos, sintomas ou qualquer dado real de pacientes.
 - Trate arquivos JSON exportados como informação sensível e mantenha-os em local privado.
+- Ao abrir a nova versão, o app tenta apagar o armazenamento local usado pela antiga demonstração, conforme pedido para iniciar vazio.
 
 ## Requisitos antes de dados reais
 
