@@ -1,10 +1,14 @@
 # Entre Consultas
 
+**Versão 0.3.0 — layout responsivo para celular, tablet e desktop.**
+
 Protótipo de diário de acompanhamento pessoal. Ele começa sem pacientes nem registros de exemplo. Faça seus próprios registros; depois do primeiro, a visão **Minha análise** mostra os gráficos e permite preparar um resumo.
 
 ## Abrir
 
 Extraia o ZIP e mantenha `index.html`, `styles.css` e `app.js` juntos. Abra `index.html` em um navegador moderno. O protótipo não usa servidor nem dependências externas.
+
+O layout adapta os formulários, gráficos, cartões, navegação e modal para larguras de tela diferentes, incluindo orientação horizontal e áreas seguras de celulares.
 
 ## Salvamento e privacidade
 
