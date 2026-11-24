@@ -253,6 +253,7 @@
         const typing = list.filter(function (entry) { return Number(entry.typingSeconds) > 0; });
         const lastTyping = typing[0];
         document.getElementById("typingPatientLatest").textContent = lastTyping ? Number(lastTyping.typingSeconds).toFixed(1) + " s · " + Number(lastTyping.typingAccuracy || 0) + "%" : "sem teste";
+        document.getElementById("exportPatientData").disabled = !entries.some(function (entry) { return !entry.demo; });
         const recent = getPatientEntries("p001", 180).slice().reverse().slice(0, 3);
         renderEntries(document.getElementById("patientRecent"), recent, false, "Seus registros vão aparecer aqui.");
       }
